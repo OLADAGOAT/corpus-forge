@@ -2,8 +2,11 @@
 
 #### The Team members
 
-* Names, epita email addresses, and GitHub usernames of all team members.
+This project was completed individually.
 
+- Name: Olamipo Adewumi
+- EPITA email: olamipo.adewumi@epita.fr
+- GitHub username: OLADAGOAT
 ---
 
 #### Initial Design
@@ -28,6 +31,14 @@ For each major decision:
 * Document how the project was originally divided among each team member.
 * Document how responsibilities possibly evolved over time.
 
+Since this is an individual project, all responsibilities were handled by one student.
+
+- Repository setup: Olamipo Adewumi
+- Application setup and testing: Olamipo Adewumi
+- Document ingestion features: Olamipo Adewumi
+- AI/RAG workflow implementation: Olamipo Adewumi
+- Prompt engineering and testing: Olamipo Adewumi
+- README, REPORT, and presentation preparation: Olamipo Adewumi
 ---
 
 #### AI Collaboration
