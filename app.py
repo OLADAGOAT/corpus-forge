@@ -151,6 +151,50 @@ Corpus:
     return response.text
 
 
+def generate_quiz(corpus_text):
+    if not GOOGLE_API_KEY:
+        return "Missing GOOGLE_API_KEY. Add it inside your .env file."
+
+    model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
+
+    prompt = f"""
+You are helping a student revise from selected documents.
+
+Create a 5-question quiz using ONLY the corpus below.
+
+Each question must have:
+- 4 answer choices: A, B, C, D
+- the correct answer
+- a short explanation
+
+Format exactly like this:
+
+1. Question: question here
+   A. option
+   B. option
+   C. option
+   D. option
+   Correct answer: A/B/C/D
+   Explanation: short explanation
+
+2. Question: question here
+   A. option
+   B. option
+   C. option
+   D. option
+   Correct answer: A/B/C/D
+   Explanation: short explanation
+
+Corpus:
+{corpus_text[:12000]}
+"""
+
+    response = model.generate_content(prompt)
+    update_usage(response)
+
+    return response.text
+
+
 st.set_page_config(page_title="Corpus Forge", layout="wide")
 
 st.title("Corpus Forge")
@@ -263,5 +307,20 @@ else:
 
             st.success("Flashcards saved to artifacts/flashcards.md")
 
+        st.header("Generate Quiz")
+
+        if st.button("Generate Quiz"):
+            with st.spinner("Creating quiz..."):
+                quiz = generate_quiz(combined_text)
+
+            st.subheader("Quiz")
+            st.write(quiz)
+
+            quiz_file = ARTIFACTS_DIR / "quiz.md"
+            quiz_file.write_text(quiz, encoding="utf-8")
+
+            st.success("Quiz saved to artifacts/quiz.md")
+
 st.header("Next Features")
-st.write("- Add quiz generation")
+st.write("- Add code review report")
+st.write("- Add architecture/control-flow report")
