@@ -12,6 +12,9 @@ load_dotenv(override=True)
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
+ARTIFACTS_DIR = Path("artifacts")
+ARTIFACTS_DIR.mkdir(exist_ok=True)
+
 SUPPORTED_TYPES = ["txt", "md", "pdf", "py", "js"]
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -76,6 +79,15 @@ def list_documents():
     return files
 
 
+def update_usage(response):
+    st.session_state.request_count += 1
+
+    try:
+        st.session_state.token_usage += response.usage_metadata.total_token_count
+    except Exception:
+        pass
+
+
 def ask_ai(question, corpus_text):
     if not GOOGLE_API_KEY:
         return "Missing GOOGLE_API_KEY. Add it inside your .env file."
@@ -96,19 +108,45 @@ Question:
 """
 
     response = model.generate_content(prompt)
+    update_usage(response)
 
-    if "request_count" not in st.session_state:
-        st.session_state.request_count = 0
+    return response.text
 
-    if "token_usage" not in st.session_state:
-        st.session_state.token_usage = 0
 
-    st.session_state.request_count += 1
+def generate_flashcards(corpus_text):
+    if not GOOGLE_API_KEY:
+        return "Missing GOOGLE_API_KEY. Add it inside your .env file."
 
-    try:
-        st.session_state.token_usage += response.usage_metadata.total_token_count
-    except Exception:
-        pass
+    model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
+
+    prompt = f"""
+You are helping a student revise from selected documents.
+
+Create 5 useful flashcards using ONLY the corpus below.
+
+Format exactly like this:
+
+1. Q: question
+   A: answer
+
+2. Q: question
+   A: answer
+
+3. Q: question
+   A: answer
+
+4. Q: question
+   A: answer
+
+5. Q: question
+   A: answer
+
+Corpus:
+{corpus_text[:12000]}
+"""
+
+    response = model.generate_content(prompt)
+    update_usage(response)
 
     return response.text
 
@@ -211,6 +249,19 @@ else:
                 st.subheader("AI Answer")
                 st.write(answer)
 
+        st.header("Generate Flashcards")
+
+        if st.button("Generate Flashcards"):
+            with st.spinner("Creating flashcards..."):
+                flashcards = generate_flashcards(combined_text)
+
+            st.subheader("Flashcards")
+            st.write(flashcards)
+
+            flashcard_file = ARTIFACTS_DIR / "flashcards.md"
+            flashcard_file.write_text(flashcards, encoding="utf-8")
+
+            st.success("Flashcards saved to artifacts/flashcards.md")
+
 st.header("Next Features")
-st.write("- Add flashcard generation")
 st.write("- Add quiz generation")
