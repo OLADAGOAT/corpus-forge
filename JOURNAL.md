@@ -36,3 +36,20 @@
 - **Hook Version**: 1.02
 - **Date**: 19-05-2026 14:06
 - **Prompt**: Add an automatic journal logger to this Streamlit app.  Requirements: - Use JOURNAL.md in the project root. - Create a function called log_journal(action). - The function should append the current date/time and the action to JOURNAL.md. - Log these actions:   - when a document is uploaded   - when a document is deleted   - when the user asks AI a question   - when flashcards are generated   - when a quiz is generated   - when a code review report is generated - Do not remove existing features. - Keep the code simple and beginner-friendly.
+
+### **Summary of Changes**
+- **Date**: 19-05-2026 14:20
+- **Task**: Added automatic journal logging functionality to Corpus Forge Streamlit app
+- **Changes Made**:
+  1. Added `from datetime import datetime` import
+  2. Created `log_journal(action)` function that appends timestamped entries to JOURNAL.md
+  3. Called `log_journal()` at 5 action points:
+     - Document upload: logs filename
+     - Document deletion: logs filename
+     - User asks AI: logs first 50 characters of question
+     - Flashcards generated: logs action
+     - Quiz generated: logs action
+  4. No existing features were removed
+  5. Code is simple and beginner-friendly with docstring
+- **Format**: Entries are appended to JOURNAL.md in chronological order with format: `- **YYYY-MM-DD HH:MM:SS**: action description`
+- **Next Steps**: Code review report logging can be added when that feature is implemented

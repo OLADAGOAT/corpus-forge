@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 
 import streamlit as st
 from pypdf import PdfReader
@@ -21,6 +22,20 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+
+
+def log_journal(action):
+    """Append an action to JOURNAL.md with a timestamp."""
+    journal_file = Path("JOURNAL.md")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = f"\n- **{timestamp}**: {action}"
+    
+    if journal_file.exists():
+        current_content = journal_file.read_text(encoding="utf-8")
+        journal_file.write_text(current_content + entry, encoding="utf-8")
+    else:
+        header = "# Corpus Forge Journal\n\n### Runtime Actions"
+        journal_file.write_text(header + entry, encoding="utf-8")
 
 
 def save_uploaded_file(uploaded_file):
@@ -217,6 +232,7 @@ uploaded_files = st.sidebar.file_uploader(
 if uploaded_files:
     for uploaded_file in uploaded_files:
         save_uploaded_file(uploaded_file)
+        log_journal(f"Document uploaded: {uploaded_file.name}")
 
     st.sidebar.success("Files uploaded successfully.")
 
@@ -242,6 +258,7 @@ else:
         with col2:
             if st.button("Delete", key=f"delete_{file_path.name}"):
                 delete_document(file_path)
+                log_journal(f"Document deleted: {file_path.name}")
                 st.success(f"{file_path.name} deleted.")
                 st.rerun()
 
@@ -289,6 +306,7 @@ else:
             else:
                 with st.spinner("Thinking..."):
                     answer = ask_ai(question, combined_text)
+                    log_journal(f"User asked AI: {question[:50]}")
 
                 st.subheader("AI Answer")
                 st.write(answer)
@@ -298,6 +316,7 @@ else:
         if st.button("Generate Flashcards"):
             with st.spinner("Creating flashcards..."):
                 flashcards = generate_flashcards(combined_text)
+                log_journal("Flashcards generated")
 
             st.subheader("Flashcards")
             st.write(flashcards)
@@ -312,6 +331,7 @@ else:
         if st.button("Generate Quiz"):
             with st.spinner("Creating quiz..."):
                 quiz = generate_quiz(combined_text)
+                log_journal("Quiz generated")
 
             st.subheader("Quiz")
             st.write(quiz)
