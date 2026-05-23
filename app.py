@@ -29,7 +29,7 @@ def log_journal(action):
     journal_file = Path("JOURNAL.md")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     entry = f"\n- **{timestamp}**: {action}"
-    
+
     if journal_file.exists():
         current_content = journal_file.read_text(encoding="utf-8")
         journal_file.write_text(current_content + entry, encoding="utf-8")
@@ -210,6 +210,92 @@ Corpus:
     return response.text
 
 
+def generate_code_review(corpus_text):
+    if not GOOGLE_API_KEY:
+        return "Missing GOOGLE_API_KEY. Add it inside your .env file."
+
+    model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
+
+    prompt = f"""
+You are reviewing source code from a selected corpus.
+
+Use ONLY the code/text below.
+
+Create a simple code review report with these sections:
+
+# Code Review Report
+
+## 1. Summary
+Briefly explain what the code seems to do.
+
+## 2. Strengths
+List what is good or clear.
+
+## 3. Problems or Risks
+List bugs, weak parts, missing checks, or confusing code.
+
+## 4. Suggested Improvements
+Give practical improvements.
+
+## 5. Beginner-Friendly Explanation
+Explain the code in simple student-friendly language.
+
+Corpus:
+{corpus_text[:12000]}
+"""
+
+    response = model.generate_content(prompt)
+    update_usage(response)
+
+    return response.text
+
+
+def generate_architecture_report(corpus_text):
+    if not GOOGLE_API_KEY:
+        return "Missing GOOGLE_API_KEY. Add it inside your .env file."
+
+    model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
+
+    prompt = f"""
+You are analyzing a selected software/document corpus.
+
+Use ONLY the corpus below.
+
+Create an Architecture and Control-Flow Report with these sections:
+
+# Architecture and Control-Flow Report
+
+## 1. System Overview
+Explain what the system or code appears to do.
+
+## 2. Main Components
+List the main files, functions, modules, or sections.
+
+## 3. Data Flow
+Explain how data moves through the system.
+
+## 4. Control Flow
+Explain the order of execution or user workflow.
+
+## 5. Important Dependencies
+Mention important libraries, APIs, or external tools used.
+
+## 6. Weaknesses or Missing Parts
+List missing features, risks, or unclear design parts.
+
+## 7. Beginner-Friendly Explanation
+Explain the architecture simply for a student presentation.
+
+Corpus:
+{corpus_text[:12000]}
+"""
+
+    response = model.generate_content(prompt)
+    update_usage(response)
+
+    return response.text
+
+
 st.set_page_config(page_title="Corpus Forge", layout="wide")
 
 st.title("Corpus Forge")
@@ -341,6 +427,39 @@ else:
 
             st.success("Quiz saved to artifacts/quiz.md")
 
-st.header("Next Features")
-st.write("- Add code review report")
-st.write("- Add architecture/control-flow report")
+        st.header("Generate Code Review Report")
+
+        if st.button("Generate Code Review Report"):
+            with st.spinner("Reviewing code..."):
+                code_review = generate_code_review(combined_text)
+                log_journal("Code review report generated")
+
+            st.subheader("Code Review Report")
+            st.write(code_review)
+
+            code_review_file = ARTIFACTS_DIR / "code_review.md"
+            code_review_file.write_text(code_review, encoding="utf-8")
+
+            st.success("Code review saved to artifacts/code_review.md")
+
+        st.header("Generate Architecture / Control-Flow Report")
+
+        if st.button("Generate Architecture Report"):
+            with st.spinner("Creating architecture report..."):
+                architecture_report = generate_architecture_report(combined_text)
+                log_journal("Architecture/control-flow report generated")
+
+            st.subheader("Architecture / Control-Flow Report")
+            st.write(architecture_report)
+
+            architecture_file = ARTIFACTS_DIR / "architecture_report.md"
+            architecture_file.write_text(architecture_report, encoding="utf-8")
+
+            st.success("Architecture report saved to artifacts/architecture_report.md")
+
+st.header("Project Status")
+st.write(
+    "Core features implemented: upload, delete, document selection, AI Q&A, "
+    "flashcards, quiz, code review, architecture/control-flow report, "
+    "usage tracking, and journal logging."
+)
